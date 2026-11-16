@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>마운자로 일본 구매 손익 계산기</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e6b73'/%3E%3Crect x='15' y='9' width='34' height='46' rx='6' fill='%23fff'/%3E%3Crect x='21' y='15' width='22' height='11' rx='2.5' fill='%230e6b73' opacity='.16'/%3E%3Crect x='21' y='15' width='22' height='11' rx='2.5' fill='none' stroke='%230e6b73' stroke-width='1.5'/%3E%3Crect x='21' y='30' width='6' height='5.5' rx='1.5' fill='%230e6b73'/%3E%3Crect x='29' y='30' width='6' height='5.5' rx='1.5' fill='%230e6b73'/%3E%3Crect x='37' y='30' width='6' height='5.5' rx='1.5' fill='%230e6b73'/%3E%3Crect x='21' y='37.5' width='6' height='5.5' rx='1.5' fill='%230e6b73'/%3E%3Crect x='29' y='37.5' width='6' height='5.5' rx='1.5' fill='%230e6b73'/%3E%3Crect x='37' y='37.5' width='6' height='5.5' rx='1.5' fill='%230e6b73'/%3E%3Crect x='21' y='45' width='6' height='5.5' rx='1.5' fill='%230e6b73'/%3E%3Crect x='29' y='45' width='6' height='5.5' rx='1.5' fill='%230e6b73'/%3E%3Crect x='37' y='45' width='6' height='5.5' rx='1.5' fill='%23c98a1b'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#0e6b73">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -78,12 +80,16 @@
   .panel + .panel { margin-top: 16px; }
   h2 { font-size: 16px; margin: 0 0 4px; font-weight: 600; }
   .hint { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
-  .dose { border-top: 1px solid var(--line); padding: 14px 0 4px; }
-  .dose:first-of-type { border-top: 0; padding-top: 4px; }
-  .dose-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .dose { border-top: 1px solid var(--line); margin-top: 14px; padding: 14px 0 4px; }
+  .dose[hidden] { display: none; }
+  .dose-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
   .dose-name { font-weight: 600; font-size: 15px; }
-  .dose-note { font-size: 13px; color: var(--muted); }
+  .dose-note { font-size: 13px; color: var(--muted); margin: 2px 0 10px; min-height: 1.4em; }
   .dose-note b { font-weight: 600; }
+  .rm { background: none; border: 0; padding: 2px 4px; font: inherit; font-size: 13px; color: var(--muted); cursor: pointer; text-decoration: underline; }
+  .rm:hover { color: var(--loss); }
+  .rm:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .empty { color: var(--muted); font-size: 14px; margin: 14px 0 0; }
   .pos { color: var(--gain); }
   .neg { color: var(--loss); }
   .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
@@ -91,7 +97,7 @@
   @media (max-width: 480px) { .grid3 { grid-template-columns: 1fr 1fr; } }
   label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
   .field { position: relative; }
-  input[type="number"] {
+  input[type="number"], select {
     width: 100%;
     font: inherit;
     color: var(--ink);
@@ -101,9 +107,10 @@
     padding: 9px 10px;
     font-variant-numeric: tabular-nums;
   }
-  input[type="number"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
-  .conv { font-size: 12px; color: var(--muted); margin-top: 3px; font-variant-numeric: tabular-nums; }
-  .rule { height: 1px; background: var(--line); margin: 16px 0; }
+  select { cursor: pointer; }
+  select:disabled { cursor: default; opacity: 0.6; }
+  input[type="number"]:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  .conv { font-size: 13px; color: var(--ink); margin-top: 3px; font-variant-numeric: tabular-nums; }
 
   .result { position: sticky; top: 16px; }
   @media (max-width: 800px) { .result { position: static; } }
@@ -132,60 +139,50 @@
   .notes { margin: 18px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: 13px; }
   .notes li { padding-left: 14px; position: relative; margin-bottom: 5px; }
   .notes li::before { content: ""; position: absolute; left: 0; top: 0.65em; width: 5px; height: 5px; border-radius: 50%; background: var(--line); }
+  .bul { margin: 0 0 14px; padding: 0; list-style: none; color: var(--muted); font-size: 13px; }
+  .bul li { padding-left: 14px; position: relative; margin-bottom: 4px; }
+  .bul li::before, .notes li::before { content: ""; position: absolute; left: 0; top: 0.62em; width: 5px; height: 5px; border-radius: 50%; background: var(--muted); opacity: 0.6; }
+  .actions { display: flex; gap: 10px; margin-top: 14px; }
+  .btn { flex: 1; font: inherit; font-weight: 500; font-size: 14px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--field); color: var(--ink); cursor: pointer; }
+  .btn:hover:not(:disabled) { border-color: var(--accent); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+  .toast { min-height: 1.4em; margin: 8px 0 0; font-size: 13px; color: var(--accent); }
+  .foot { margin-top: 28px; text-align: center; font-size: 12px; color: var(--muted); }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>마운자로 일본 구매 손익 계산기</h1>
-  <p class="sub">일본 약값에 항공권, 숙박, 식비, 교통비를 모두 더해서 한국에서 같은 수량을 샀을 때와 비교합니다. 값은 전부 수정할 수 있습니다.</p>
+  <p class="sub">일본 구매 총비용(약값 + 여행비)을 한국 구매와 비교합니다. 모든 값은 수정할 수 있습니다.</p>
 
   <div class="layout">
     <div>
       <section class="panel">
         <h2>약값과 구매 수량</h2>
-        <p class="hint">한국과 일본 모두 4펜(1개월분) 가격 기준입니다. 한국은 원(처방료 포함), 일본은 엔이며, 일본 기본값은 12펜 가격을 3으로 나눈 값입니다. 수량은 용량별로 4펜 단위로 넣어주세요.</p>
-        <div class="field" style="max-width:220px;margin-bottom:6px"><label for="rate">환율 (100엔당 원)</label><input id="rate" type="number" min="0" step="5" value="850"></div>
-
-        <div class="dose" data-dose="5">
-          <div class="dose-head">
-            <span class="dose-name">5mg</span>
-            <span class="dose-note" data-note></span>
-          </div>
-          <div class="grid3">
-            <div class="field"><label for="kr5">한국 4펜 (원)</label><input id="kr5" type="number" min="0" step="1000" value="410000"></div>
-            <div class="field"><label for="jp5">일본 4펜 (엔)</label><input id="jp5" type="number" min="0" step="100" value="16867"><div class="conv" id="cv5"></div></div>
-            <div class="field"><label for="q5">구매 수량 (4펜 단위)</label><input id="q5" type="number" min="0" step="1" value="0"></div>
-          </div>
+        <ul class="bul">
+          <li>4펜(1개월분) 기준 가격</li>
+          <li>일본 가격은 온라인 구매 기준</li>
+          <li>일본 가격은 엔화로 입력하면 원화로 환산해서 계산</li>
+        </ul>
+        <div class="grid2">
+          
+          <div class="field"><label for="rate">환율 (100엔당 원)</label><input id="rate" type="number" min="0" step="5" value="850"></div>
+          <div class="field"><label for="addDose">용량 추가</label><select id="addDose"></select></div>
         </div>
-
-        <div class="dose" data-dose="7.5">
-          <div class="dose-head">
-            <span class="dose-name">7.5mg</span>
-            <span class="dose-note" data-note></span>
-          </div>
-          <div class="grid3">
-            <div class="field"><label for="kr75">한국 4펜 (원)</label><input id="kr75" type="number" min="0" step="1000" value="560000"></div>
-            <div class="field"><label for="jp75">일본 4펜 (엔)</label><input id="jp75" type="number" min="0" step="100" value="28633"><div class="conv" id="cv75"></div></div>
-            <div class="field"><label for="q75">구매 수량 (4펜 단위)</label><input id="q75" type="number" min="0" step="1" value="3"></div>
-          </div>
-        </div>
-
-        <div class="dose" data-dose="10">
-          <div class="dose-head">
-            <span class="dose-name">10mg</span>
-            <span class="dose-note" data-note></span>
-          </div>
-          <div class="grid3">
-            <div class="field"><label for="kr10">한국 4펜 (원)</label><input id="kr10" type="number" min="0" step="1000" value="560000"></div>
-            <div class="field"><label for="jp10">일본 4펜 (엔)</label><input id="jp10" type="number" min="0" step="100" value="29800"><div class="conv" id="cv10"></div></div>
-            <div class="field"><label for="q10">구매 수량 (4펜 단위)</label><input id="q10" type="number" min="0" step="1" value="0"></div>
-          </div>
-        </div>
+        <p class="empty" id="empty" hidden>용량을 선택해주세요.</p>
+        <div id="doses"></div>
       </section>
 
       <section class="panel">
         <h2>일본 여행 비용</h2>
-        <p class="hint">1인 기준 예상치입니다. 실제 금액에 맞게 바꿔주세요.</p>
+        <ul class="bul">
+          <li>1인 기준 예상치, 실제 금액으로 수정</li>
+          <li>식비·교통비: 숙박 일수 + 1일 기준</li>
+          <li>숙박비: 객실 금액을 동반 인원 수로 나눔</li>
+          <li>공항 교통비·식사비: 여행 전체 기준 1회 금액</li>
+          <li>기타: 보냉 파우치, 현지 진료비 등</li>
+        </ul>
         <div class="grid2">
           <div class="field"><label for="flight">왕복 항공권 (원)</label><input id="flight" type="number" min="0" step="10000" value="350000"></div>
           <div class="field"><label for="nights">숙박 일수 (박)</label><input id="nights" type="number" min="0" step="1" value="1"></div>
@@ -197,7 +194,6 @@
           <div class="field"><label for="meal">공항 식사비 (원)</label><input id="meal" type="number" min="0" step="1000" value="15000"></div>
           <div class="field"><label for="etc">기타 (원)</label><input id="etc" type="number" min="0" step="5000" value="30000"></div>
         </div>
-        <p class="hint" style="margin:12px 0 0">식비와 교통비는 숙박 일수 + 1일 기준으로 계산합니다. 숙박비는 객실 금액을 동반 인원 수로 나눕니다. 공항 교통비와 식사비는 여행 전체 기준 1회 금액을 넣어주세요. 기타에는 보냉 파우치, 현지 진료비 등을 넣을 수 있습니다.</p>
       </section>
     </div>
 
@@ -206,7 +202,7 @@
         <div id="verdict" class="verdict idle">
           <p class="label" id="vLabel">일본 구매 시 손익 (1인 기준)</p>
           <div class="big" id="vBig">-</div>
-          <p class="msg" id="vMsg">구매 수량을 입력해주세요.</p>
+          <p class="msg" id="vMsg">용량을 선택해주세요.</p>
         </div>
 
         <div class="bar" id="bar" aria-hidden="true"></div>
@@ -221,14 +217,20 @@
           <div class="stat"><div class="k">여행비 회수 기준</div><div class="v" id="sBreak">-</div></div>
         </div>
 
+        <div class="actions">
+          <button type="button" class="btn" id="btnCopy">결과 복사</button>
+          <button type="button" class="btn" id="btnPng">이미지 저장</button>
+        </div>
+        <p class="toast" id="toast" role="status" aria-live="polite"></p>
+
         <ul class="notes">
-          <li>4펜 = 1개월분 기준이며, 일본 가격도 4펜 단위로 환산해서 비교합니다.</li>
-          <li>환율은 입력한 값으로 고정해서 계산합니다. 현지 진료·처방 비용, 보냉 비용은 직접 입력한 값만 반영됩니다.</li>
-          <li>처방약 반입 한도와 필요 서류는 출국 전 관세청에서 확인이 필요합니다.</li>
+          <li>환율은 입력값으로 고정해서 계산</li>
+          <li>현지 진료·처방 비용, 보냉 비용은 직접 입력한 값만 반영</li>
         </ul>
       </section>
     </aside>
   </div>
+  <footer class="foot">© 2026 JEEYEA. All rights reserved.</footer>
 </div>
 
 <script>
@@ -237,15 +239,65 @@
   var signed = function (n) { return (n >= 0 ? "+" : "−") + Math.abs(Math.round(n)).toLocaleString("ko-KR") + "원"; };
   var num = function (id) { var v = parseFloat($(id).value); return isFinite(v) && v > 0 ? v : 0; };
 
+  // kr: 한국 4펜 (원), jp: 일본 4펜 (엔, 환율 850원 기준 환산 기본값), q: 기본 수량 (4펜 단위)
   var DOSES = [
-    { key: "5",   kr: "kr5",  jp: "jp5",  q: "q5"  },
-    { key: "7.5", kr: "kr75", jp: "jp75", q: "q75" },
-    { key: "10",  kr: "kr10", jp: "jp10", q: "q10" }
+    { key: "2.5",  kr: 300000, jp: 9294,  q: 1 },
+    { key: "5",    kr: 410000, jp: 16867, q: 1 },
+    { key: "7.5",  kr: 560000, jp: 28633, q: 3 },
+    { key: "10",   kr: 560000, jp: 29800, q: 1 },
+    { key: "12.5", kr: 715000, jp: 46353, q: 1 },
+    { key: "15",   kr: 715000, jp: 54118, q: 1 }
   ];
+  var active = { "7.5": true };
+  var last = null;
+  var sid = function (d) { return d.key.replace(".", ""); };
 
   var COLORS = ["#0e6b73", "#c98a1b", "#7b6bb3", "#3f8f5c", "#b4574f", "#6b7a88", "#2f7fb8"];
 
+  // 용량 카드 생성
+  DOSES.forEach(function (d) {
+    var s = sid(d);
+    var el = document.createElement("div");
+    el.className = "dose";
+    el.id = "dose" + s;
+    el.hidden = true;
+    el.innerHTML =
+      '<div class="dose-head"><span class="dose-name">' + d.key + 'mg</span>' +
+      '<button type="button" class="rm" data-rm="' + d.key + '">삭제</button></div>' +
+      '<div class="dose-note" id="note' + s + '"></div>' +
+      '<div class="grid3">' +
+        '<div class="field"><label for="kr' + s + '">한국 4펜 (원)</label><input id="kr' + s + '" type="number" min="0" step="1000" value="' + d.kr + '"></div>' +
+        '<div class="field"><label for="jp' + s + '">일본 4펜 (엔)</label><input id="jp' + s + '" type="number" min="0" step="100" value="' + d.jp + '"><div class="conv" id="cv' + s + '"></div></div>' +
+        '<div class="field"><label for="q' + s + '">구매 수량 (4펜 단위)</label><input id="q' + s + '" type="number" min="0" step="1" value="' + d.q + '"></div>' +
+      '</div>';
+    $("doses").appendChild(el);
+  });
+
+  // 드롭다운과 카드 표시 동기화
+  function sync() {
+    var sel = $("addDose");
+    var html = "";
+    var remain = 0;
+    DOSES.forEach(function (d) {
+      $("dose" + sid(d)).hidden = !active[d.key];
+      if (!active[d.key]) { html += '<option value="' + d.key + '">' + d.key + 'mg</option>'; remain++; }
+    });
+    sel.innerHTML = '<option value="">' + (remain ? "용량 선택" : "모두 추가됨") + '</option>' + html;
+    sel.value = "";
+    sel.disabled = remain === 0;
+    $("empty").hidden = Object.keys(active).length > 0;
+  }
+
+  $("addDose").addEventListener("change", function (e) {
+    if (e.target.value) { active[e.target.value] = true; sync(); calc(); }
+  });
+  $("doses").addEventListener("click", function (e) {
+    var k = e.target && e.target.getAttribute && e.target.getAttribute("data-rm");
+    if (k) { delete active[k]; sync(); calc(); }
+  });
+
   function calc() {
+    
     var rate = num("rate") / 100;
     var people = Math.max(1, Math.floor(num("people")));
     var nights = Math.floor(num("nights"));
@@ -262,26 +314,28 @@
     };
     var tripTotal = trip.flight + trip.hotel + trip.food + trip.move + trip.bus + trip.meal + trip.etc;
 
-    var krTotal = 0, jpDrug = 0, sets = 0;
+    var krTotal = 0, jpDrug = 0, sets = 0, anyActive = false, items = [];
 
     DOSES.forEach(function (d) {
-      var kr4 = num(d.kr), jpYen = num(d.jp), jp12 = jpYen * rate, q = Math.floor(num(d.q));
-      $("cv" + d.key.replace(".", "")).textContent = "≈ " + won(jp12);
-      var krSet = kr4;
-      var perSet = krSet - jp12;
-      krTotal += krSet * q;
-      jpDrug += jp12 * q;
+      if (!active[d.key]) return;
+      anyActive = true;
+      var s = sid(d);
+      var kr4 = num("kr" + s), jp4 = num("jp" + s) * rate, q = Math.floor(num("q" + s));
+      
+      $("cv" + s).textContent = "≈ " + won(jp4);
+      var perUnit = kr4 - jp4;
+      krTotal += kr4 * q;
+      jpDrug += jp4 * q;
       sets += q;
+      if (q > 0) items.push({ name: d.key + "mg", q: q, kr: kr4 * q, jp: jp4 * q });
 
-      var note = document.querySelector('[data-dose="' + d.key + '"] [data-note]');
-      var be;
-      if (perSet > 0 && tripTotal > 0) {
-        be = Math.ceil(tripTotal / perSet);
-        note.innerHTML = '4펜당 약값 <b class="pos">' + signed(perSet) + '</b> · 여행비 회수 ' + be + '개월분부터';
-      } else if (perSet > 0) {
-        note.innerHTML = '4펜당 약값 <b class="pos">' + signed(perSet) + '</b>';
+      var note = $("note" + s);
+      if (perUnit > 0 && tripTotal > 0) {
+        note.innerHTML = '4펜당 약값 <b class="pos">' + signed(perUnit) + '</b> · 여행비 회수 ' + Math.ceil(tripTotal / perUnit) + '개월분부터';
+      } else if (perUnit > 0) {
+        note.innerHTML = '4펜당 약값 <b class="pos">' + signed(perUnit) + '</b>';
       } else {
-        note.innerHTML = '4펜당 약값 <b class="neg">' + signed(perSet) + '</b> · 일본이 더 비쌈';
+        note.innerHTML = '4펜당 약값 <b class="neg">' + signed(perUnit) + '</b> · 일본이 더 비쌈';
       }
     });
 
@@ -290,10 +344,10 @@
     var pens = sets * 4;
 
     var v = $("verdict");
-    if (sets === 0) {
+    if (!anyActive || sets === 0) {
       v.className = "verdict idle";
       $("vBig").textContent = "-";
-      $("vMsg").textContent = "구매 수량을 입력해주세요.";
+      $("vMsg").textContent = anyActive ? "구매 수량을 입력해주세요." : "용량을 선택해주세요.";
     } else if (net > 0) {
       v.className = "verdict gain";
       $("vBig").textContent = signed(net);
@@ -320,14 +374,12 @@
       ["기타", trip.etc, ""]
     ];
     var html = "";
-    rows.forEach(function (r, i) {
+    rows.forEach(function (r) {
       html += '<tr class="' + r[2] + '"><td>' + r[0] + '</td><td>' + won(r[1]) + '</td></tr>';
-      if (i === 0) { /* spacer handled by styling */ }
     });
     html += '<tr class="sum"><td>일본 총비용 (1인 기준)</td><td>' + won(jpTotal) + '</td></tr>';
     $("break").innerHTML = html;
 
-    // composition bar for Japan total
     var parts = [
       ["약값", jpDrug], ["항공권", trip.flight], ["숙박", trip.hotel],
       ["식비", trip.food], ["교통비", trip.move], ["기타", trip.etc], ["공항", trip.bus + trip.meal]
@@ -342,11 +394,14 @@
     $("bar").innerHTML = bar;
     $("legend").innerHTML = lg;
 
-    // stats
+    last = { items: items, rows: rows, jpTotal: jpTotal, krTotal: krTotal, net: net, sets: sets, rate: num("rate"), nights: nights, people: people, big: $("vBig").textContent, msg: $("vMsg").textContent, cls: v.className.replace("verdict ", "") };
+    var ready = anyActive && sets > 0;
+    $("btnCopy").disabled = !ready;
+    $("btnPng").disabled = !ready;
+
     $("sKr").textContent = pens > 0 ? won(krTotal / pens) : "-";
     $("sJp").textContent = pens > 0 ? won(jpTotal / pens) : "-";
-    var months = sets;
-    $("sMonth").textContent = months > 0 ? signed(net / months) : "-";
+    $("sMonth").textContent = sets > 0 ? signed(net / sets) : "-";
 
     var drugSave = krTotal - jpDrug;
     if (sets === 0) {
@@ -361,8 +416,173 @@
     }
   }
 
-  document.querySelectorAll("input").forEach(function (el) { el.addEventListener("input", calc); });
+  document.addEventListener("input", function (e) {
+    if (e.target && e.target.tagName === "INPUT") calc();
+  });
+  sync();
   calc();
+
+  // ---- 결과 공유 (복사 / 이미지 저장) ----
+  var toastTimer = null;
+  function toast(msg) {
+    var t = $("toast");
+    t.textContent = msg;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.textContent = ""; }, 2600);
+  }
+
+  function summaryText() {
+    var s = last;
+    if (!s) return "";
+    var L = ["마운자로 일본 구매 손익 (1인 기준)"];
+    if (s.net > 0) L.push("결과: 일본 구매 시 " + won(s.net) + " 이득");
+    else if (s.net < 0) L.push("결과: 일본 구매 시 " + won(-s.net) + " 손해");
+    else L.push("결과: 두 쪽의 총비용이 같음");
+    L.push("");
+    L.push("[구매 내역]");
+    s.items.forEach(function (it) {
+      L.push("- " + it.name + " × " + it.q + " (4펜 단위): 한국 " + won(it.kr) + " / 일본 " + won(it.jp));
+    });
+    L.push("");
+    L.push("[비용]");
+    s.rows.forEach(function (r) { L.push(r[0] + ": " + won(r[1])); });
+    L.push("일본 총비용 (1인 기준): " + won(s.jpTotal));
+    L.push("");
+    L.push("환율 100엔 = " + s.rate + "원 · 숙박 " + s.nights + "박 · 동반 " + s.people + "명");
+    return L.join("\n");
+  }
+
+  function fallbackCopy(t) {
+    var ta = document.createElement("textarea");
+    ta.value = t;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  $("btnCopy").addEventListener("click", function () {
+    var t = summaryText();
+    if (!t) return;
+    var done = function (ok) { toast(ok ? "결과를 복사했습니다." : "복사하지 못했습니다. 이미지 저장을 이용해주세요."); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(t).then(function () { done(true); }, function () { done(fallbackCopy(t)); });
+    } else {
+      done(fallbackCopy(t));
+    }
+  });
+
+  function rr(x, px, py, w, h, r, fill) {
+    x.beginPath();
+    x.moveTo(px + r, py);
+    x.arcTo(px + w, py, px + w, py + h, r);
+    x.arcTo(px + w, py + h, px, py + h, r);
+    x.arcTo(px, py + h, px, py, r);
+    x.arcTo(px, py, px + w, py, r);
+    x.closePath();
+    x.fillStyle = fill;
+    x.fill();
+  }
+
+  function drawPng() {
+    var s = last;
+    if (!s) return;
+    // 캔버스는 아직 로드되지 않은 폰트 조각을 쓰지 못하므로, 그릴 글자가 모두 로드된 뒤에 그린다
+    var txt = [summaryText(), "일본 구매 시 손익", "구매 내역 (일본 약값)", "비용", s.big, s.msg].join(" ");
+    if (!document.fonts || !document.fonts.load) { renderPng(); return; }
+    var F = '"IBM Plex Sans KR"';
+    Promise.all(["400", "600", "700"].map(function (w) { return document.fonts.load(w + " 16px " + F, txt); }))
+      .then(renderPng, renderPng);
+  }
+
+  function renderPng() {
+    var s = last;
+    if (!s) return;
+    var FONT = '"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif';
+    var W = 720, pad = 32, rowH = 34, sc = 2;
+    var n = s.items.length, R = s.rows.length;
+    var P = n ? 22 + n * rowH + 14 : 0;
+    var H = 72 + 112 + 24 + P + 22 + (R + 1) * rowH + 14 + 18 + pad;
+    var c = document.createElement("canvas");
+    c.width = W * sc;
+    c.height = H * sc;
+    var x = c.getContext("2d");
+    x.scale(sc, sc);
+    x.fillStyle = "#ffffff";
+    x.fillRect(0, 0, W, H);
+    x.textBaseline = "alphabetic";
+
+    x.textAlign = "left";
+    x.fillStyle = "#17212b";
+    x.font = "700 22px " + FONT;
+    x.fillText("마운자로 일본 구매 손익 (1인 기준)", pad, pad + 24);
+    var y = 72;
+
+    var pal = { gain: ["#dff3e8", "#12794a"], loss: ["#fae3e0", "#b4332b"], idle: ["#dcf0f1", "#17212b"] }[s.cls] || ["#dcf0f1", "#17212b"];
+    rr(x, pad, y, W - pad * 2, 112, 12, pal[0]);
+    x.fillStyle = "#5d6b79";
+    x.font = "400 14px " + FONT;
+    x.fillText("일본 구매 시 손익", pad + 20, y + 30);
+    x.fillStyle = pal[1];
+    x.font = "700 38px " + FONT;
+    x.fillText(s.big, pad + 20, y + 72);
+    x.fillStyle = "#17212b";
+    x.font = "400 14px " + FONT;
+    x.fillText(s.msg, pad + 20, y + 98);
+    y += 112 + 24;
+
+    function section(title) {
+      x.textAlign = "left";
+      x.fillStyle = "#5d6b79";
+      x.font = "600 13px " + FONT;
+      x.fillText(title, pad, y + 14);
+      y += 22;
+    }
+    function row(l, r, bold, line) {
+      x.textAlign = "left";
+      x.fillStyle = "#17212b";
+      x.font = (bold ? "700 " : "400 ") + "15px " + FONT;
+      x.fillText(l, pad, y + 22);
+      x.textAlign = "right";
+      x.fillText(r, W - pad, y + 22);
+      if (line) { x.fillStyle = "#dde3e9"; x.fillRect(pad, y + rowH - 1, W - pad * 2, 1); }
+      y += rowH;
+    }
+
+    if (n) {
+      section("구매 내역 (일본 약값)");
+      s.items.forEach(function (it) { row(it.name + " × " + it.q + " (4펜 단위)", won(it.jp), false, true); });
+      y += 14;
+    }
+    section("비용");
+    s.rows.forEach(function (r) { row(r[0], won(r[1]), false, true); });
+    row("일본 총비용 (1인 기준)", won(s.jpTotal), true, false);
+    y += 14;
+    x.textAlign = "left";
+    x.fillStyle = "#5d6b79";
+    x.font = "400 12px " + FONT;
+    x.fillText("환율 100엔 = " + s.rate + "원 · 숙박 " + s.nights + "박 · 동반 " + s.people + "명", pad, y + 12);
+
+    c.toBlob(function (b) {
+      if (!b) { toast("이미지를 만들지 못했습니다."); return; }
+      var url = URL.createObjectURL(b);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = "mounjaro-japan-result.png";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+      toast("이미지를 저장했습니다.");
+    }, "image/png");
+  }
+  $("btnPng").addEventListener("click", drawPng);
+
 </script>
 </body>
 </html>
